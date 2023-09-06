@@ -1,0 +1,27 @@
+{
+  "name": "currencyservice",
+  "version": "0.1.0",
+  "description": "Currency Microservice demo",
+  "repository": "https://github.com/honeycombio/microservices-demo",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "semistandard *.js"
+  },
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@grpc/grpc-js": "1.5.7",
+    "@grpc/proto-loader": "0.6.9",
+    "@opentelemetry/api": "1.0.4",
+    "@opentelemetry/auto-instrumentations-node": "0.27.4",
+    "@opentelemetry/exporter-collector-grpc": "0.25.0",
+    "@opentelemetry/sdk-node": "0.27.0",
+    "async": "3.2.3",
+    "google-protobuf": "3.19.4",
+    "pino": "7.8.0",
+    "request": "2.88.2",
+    "xml2js": "0.4.23"
+  },
+  "devDependencies": {
+    "semistandard": "^16.0.1"
+  }
+}

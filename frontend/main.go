@@ -1,0 +1,242 @@
+package main
+
+import (
+	"context"
+	"crypto/rand"
+	"encoding/hex"
+	"fmt"
+	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+	middleware "go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/sdk/resource"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"net/http"
+	"os"
+	"strconv"
+	"time"
+)
+
+const (
+	port            = "8080"
+	defaultCurrency = "USD"
+	cookieMaxAge    = 5 //60 * 60 * 48
+
+	cookiePrefix    = "shop_"
+	cookieSessionID = cookiePrefix + "session-id"
+	cookieCurrency  = cookiePrefix + "currency"
+)
+
+var (
+	whitelistedCurrencies = map[string]bool{
+		"USD": true,
+		"EUR": true,
+		"CAD": true,
+		"JPY": true,
+		"GBP": true,
+		"TRY": true}
+)
+
+type ctxKeySessionID struct{}
+
+type frontendServer struct {
+	productCatalogSvcAddr string
+	productCatalogSvcConn *grpc.ClientConn
+
+	currencySvcAddr string
+	currencySvcConn *grpc.ClientConn
+
+	cartSvcAddr string
+	cartSvcConn *grpc.ClientConn
+
+	recommendationSvcAddr string
+	recommendationSvcConn *grpc.ClientConn
+
+	checkoutSvcAddr string
+	checkoutSvcConn *grpc.ClientConn
+	getCacheConn    *grpc.ClientConn
+
+	shippingSvcAddr string
+	shippingSvcConn *grpc.ClientConn
+
+	adSvcAddr string
+	adSvcConn *grpc.ClientConn
+}
+
+var CacheTrack *CacheTracker
+var PercentNormal = 75
+var CacheUserThreshold = 35000
+var CacheMarkerThreshold = 30000
+var MockBuildId = ""
+
+func main() {
+
+	log := logrus.New()
+	log.Level = logrus.DebugLevel
+	log.Formatter = &logrus.JSONFormatter{
+		FieldMap: logrus.FieldMap{
+			logrus.FieldKeyTime:  "timestamp",
+			logrus.FieldKeyLevel: "severity",
+			logrus.FieldKeyMsg:   "message",
+		},
+		TimestampFormat: time.RFC3339Nano,
+	}
+	log.Out = os.Stdout
+
+	ctx := context.Background()
+
+	// Initialize OpenTelemetry Tracing
+	tp := initOtelTracing(ctx, log)
+	defer func() { _ = tp.Shutdown(ctx) }()
+
+	p, err := strconv.Atoi(os.Getenv("PERCENT_NORMAL"))
+	if err == nil {
+		PercentNormal = p
+	}
+	cut, err := strconv.Atoi(os.Getenv("CACHE_USER_THRESHOLD"))
+	if err == nil {
+		CacheUserThreshold = cut
+	}
+	cmt, err := strconv.Atoi(os.Getenv("CACHE_MARKER_THRESHOLD"))
+	if err == nil {
+		CacheMarkerThreshold = cmt
+	}
+	apiKey := os.Getenv("HONEYCOMB_API_KEY")
+	CacheTrack = NewCacheTracker(CacheUserThreshold, CacheMarkerThreshold, apiKey, log)
+
+	srvPort := port
+	if os.Getenv("PORT") != "" {
+		srvPort = os.Getenv("PORT")
+	}
+
+	addr := os.Getenv("LISTEN_ADDR")
+
+	MockBuildId = randomHex(4)
+
+	svc := new(frontendServer)
+	mustMapEnv(&svc.productCatalogSvcAddr, "PRODUCT_CATALOG_SERVICE_ADDR")
+	mustMapEnv(&svc.currencySvcAddr, "CURRENCY_SERVICE_ADDR")
+	mustMapEnv(&svc.cartSvcAddr, "CART_SERVICE_ADDR")
+	mustMapEnv(&svc.recommendationSvcAddr, "RECOMMENDATION_SERVICE_ADDR")
+	mustMapEnv(&svc.checkoutSvcAddr, "CHECKOUT_SERVICE_ADDR")
+	mustMapEnv(&svc.shippingSvcAddr, "SHIPPING_SERVICE_ADDR")
+	mustMapEnv(&svc.adSvcAddr, "AD_SERVICE_ADDR")
+
+	mustConnGRPC(ctx, &svc.currencySvcConn, svc.currencySvcAddr)
+	mustConnGRPC(ctx, &svc.productCatalogSvcConn, svc.productCatalogSvcAddr)
+	mustConnGRPC(ctx, &svc.cartSvcConn, svc.cartSvcAddr)
+	mustConnGRPC(ctx, &svc.recommendationSvcConn, svc.recommendationSvcAddr)
+	mustConnGRPC(ctx, &svc.shippingSvcConn, svc.shippingSvcAddr)
+	mustConnGRPC(ctx, &svc.checkoutSvcConn, svc.checkoutSvcAddr)
+	mustConnGRPC(ctx, &svc.adSvcConn, svc.adSvcAddr)
+	// getCache connection is not instrumented
+	svc.getCacheConn, err = grpc.DialContext(ctx, svc.checkoutSvcAddr,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		panic(errors.Wrapf(err, "grpc: failed to create getCache connection to checkout service %s", svc.checkoutSvcAddr))
+	}
+
+	r := mux.NewRouter()
+
+	r.HandleFunc("/", instrumentHandler(svc.homeHandler)).Methods(http.MethodGet, http.MethodHead)
+	r.HandleFunc("/product/{id}", instrumentHandler(svc.productHandler)).Methods(http.MethodGet, http.MethodHead)
+	r.HandleFunc("/cart", instrumentHandler(svc.viewCartHandler)).Methods(http.MethodGet, http.MethodHead)
+	r.HandleFunc("/cart", instrumentHandler(svc.addToCartHandler)).Methods(http.MethodPost)
+	r.HandleFunc("/cart/empty", instrumentHandler(svc.emptyCartHandler)).Methods(http.MethodPost)
+	r.HandleFunc("/setCurrency", instrumentHandler(svc.setCurrencyHandler)).Methods(http.MethodPost)
+	r.HandleFunc("/logout", instrumentHandler(svc.logoutHandler)).Methods(http.MethodGet)
+	r.HandleFunc("/cart/checkout", instrumentHandler(svc.placeOrderHandler)).Methods(http.MethodPost)
+	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
+	r.PathPrefix("/dist/").Handler(http.StripPrefix("/dist/", http.FileServer(http.Dir("./dist/"))))
+	r.HandleFunc("/robots.txt", func(w http.ResponseWriter, _ *http.Request) { _, _ = fmt.Fprint(w, "User-agent: *\nDisallow: /") })
+	r.HandleFunc("/_healthz", func(w http.ResponseWriter, _ *http.Request) { _, _ = fmt.Fprint(w, "ok") })
+
+	// Add OpenTelemetry instrumentation to incoming HTTP requests controlled by the gorilla/mux Router.
+	r.Use(middleware.Middleware("frontend"))
+
+	var handler http.Handler = r
+	handler = &logHandler{log: log, next: handler} // add logging
+	handler = ensureSessionID(handler)             // add session ID
+
+	CacheTrack.Track(ctx, svc)
+
+	log.Infof("starting server on " + addr + ":" + srvPort)
+	log.Fatal(http.ListenAndServe(addr+":"+srvPort, handler))
+}
+
+func initOtelTracing(ctx context.Context, log logrus.FieldLogger) *sdktrace.TracerProvider {
+	endpoint := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+	if endpoint == "" {
+		endpoint = "opentelemetry-collector:4317"
+	}
+
+	// Set GRPC options to establish an insecure connection to an OpenTelemetry Collector
+	// To establish a TLS connection to a secured endpoint use:
+	//   otlptracegrpc.WithTLSCredentials(credentials.NewClientTLSFromCert(nil, ""))
+	opts := []otlptracegrpc.Option{
+		otlptracegrpc.WithEndpoint(endpoint),
+		otlptracegrpc.WithInsecure(),
+	}
+
+	// Create the exporter
+	exporter, err := otlptrace.New(ctx, otlptracegrpc.NewClient(opts...))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Specify the TextMapPropagator to ensure spans propagate across service boundaries
+	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.Baggage{}, propagation.TraceContext{}))
+
+	// Set standard attributes per semantic conventions
+	res := resource.NewWithAttributes(
+		semconv.SchemaURL,
+		semconv.ServiceNameKey.String("frontend"),
+	)
+
+	// Create and set the TraceProvider
+	tp := sdktrace.NewTracerProvider(
+		sdktrace.WithBatcher(exporter),
+		sdktrace.WithResource(res),
+	)
+	otel.SetTracerProvider(tp)
+
+	return tp
+}
+
+func mustMapEnv(target *string, envKey string) {
+	v := os.Getenv(envKey)
+	if v == "" {
+		panic(fmt.Sprintf("environment variable %q not set", envKey))
+	}
+	*target = v
+}
+
+func mustConnGRPC(ctx context.Context, conn **grpc.ClientConn, addr string) {
+	// add OpenTelemetry instrumentation to outgoing gRPC requests
+	var err error
+	*conn, err = grpc.DialContext(ctx, addr,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor(otelgrpc.WithTracerProvider(otel.GetTracerProvider()))),
+		grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor(otelgrpc.WithTracerProvider(otel.GetTracerProvider()))),
+	)
+	if err != nil {
+		panic(errors.Wrapf(err, "grpc: failed to connect %s", addr))
+	}
+}
+
+func randomHex(n int) string {
+	bytes := make([]byte, n)
+	if _, err := rand.Read(bytes); err != nil {
+		return ""
+	}
+	return hex.EncodeToString(bytes)
+}
