@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: productcatalog-service-production
+  namespace: production
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: productcatalog-service
+  template:
+    metadata:
+      labels:
+        app: productcatalog-service
+    spec:
+      containers:
+        - name: productcatalog
+          image: wicks482/productcatalogservice:latest
+          ports:
+            - containerPort: 3550
+          env:
+            - name: PORT
+              value: "3550"
+            - name: SERVICE_NAME
+              value: productcatalog
+            # Add other environment variables for product catalog
+            - name: PRODUCT_CATALOG_SERVICE_ADDR
+              value: "<productcatalog-service-name>:<productcatalog-service-port>"
+            - name: SHIPPING_SERVICE_ADDR
+              value: "<shippingservice-service-name>:<shippingservice-service-port>"
+            - name: PAYMENT_SERVICE_ADDR
+              value: "<paymentservice-service-name>:<paymentservice-service-port>"
+            - name: EMAIL_SERVICE_ADDR
+              value: "<emailservice-service-name>:<emailservice-service-port>"
+            - name: CURRENCY_SERVICE_ADDR
+              value: "<currencyservice-service-name>:<currencyservice-service-port>"
+            - name: CART_SERVICE_ADDR
+              value: "<cartservice-service-name>:<cartservice-service-port>"

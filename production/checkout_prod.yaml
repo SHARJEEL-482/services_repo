@@ -1,0 +1,29 @@
+# checkout-service Deployment in production namespace
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: checkout-service-production
+  namespace: production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: checkout-service
+  template:
+    metadata:
+      labels:
+        app: checkout-service
+    spec:
+      containers:
+        - name: checkout-service
+          image: wicks482/checkoutservice:latest
+          ports:
+            - containerPort: 5050
+          env:
+            - name: PORT
+              value: "5050"
+            - name: PRODUCT_CATALOG_SERVICE_ADDR
+              value: "productcatalog-service-production:3550"
+            - name: SHIPPING_SERVICE_ADDR
+              value: "shippingservice-service-production:50051"
+            # Add other environment variables for checkout service here

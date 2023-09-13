@@ -1,0 +1,27 @@
+# adservice-service Deployment in production namespace
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adservice-service-production
+  namespace: production
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: adservice-service
+  template:
+    metadata:
+      labels:
+        app: adservice-service
+    spec:
+      containers:
+        - name: adservice-service
+          image: wicks482/adservice:latest
+          ports:
+            - containerPort: 9555
+          env:
+            - name: PORT
+              value: "9555"
+            - name: SERVICE_NAME
+              value: adservice
+            # Add other environment variables for ad service here

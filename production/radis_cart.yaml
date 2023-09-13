@@ -1,0 +1,37 @@
+# redis-cart-service Deployment in production namespace
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-cart-service-production
+  namespace: production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-cart-service
+  template:
+    metadata:
+      labels:
+        app: redis-cart-service
+    spec:
+      containers:
+        - name: redis-cart
+          image: redis:alpine
+          ports:
+            - containerPort: 6379
+          readinessProbe:
+            tcpSocket:
+              port: 6379
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: 6379
+            periodSeconds: 5
+          volumeMounts:
+            - name: data-volume
+              mountPath: /data
+          # Add other environment variables for Redis Cart service here
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: redis-pvc-production

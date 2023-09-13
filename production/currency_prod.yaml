@@ -1,0 +1,27 @@
+# currency-service Deployment in production namespace
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: currency-service-production
+  namespace: production
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: currency-service
+  template:
+    metadata:
+      labels:
+        app: currency-service
+    spec:
+      containers:
+        - name: currency
+          image: wicks482/currencyservice:latest
+          ports:
+            - containerPort: 7000
+          env:
+            - name: PORT
+              value: "7000"
+            - name: SERVICE_NAME
+              value: currency
+            # Add other environment variables for currency service here

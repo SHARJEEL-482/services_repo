@@ -1,0 +1,29 @@
+# recommendationservice-service Deployment in production namespace
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: recommendationservice-service-production
+  namespace: production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: recommendationservice-service
+  template:
+    metadata:
+      labels:
+        app: recommendationservice-service
+    spec:
+      containers:
+        - name: recommendationservice
+          image: wicks482/recommendationservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+            - name: SERVICE_NAME
+              value: recommendation
+            - name: PRODUCT_CATALOG_SERVICE_ADDR
+              value: "productcatalog-service-production:3550"
+            # Add other environment variables for recommendation service here

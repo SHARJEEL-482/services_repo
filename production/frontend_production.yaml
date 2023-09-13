@@ -1,0 +1,41 @@
+# frontend Deployment in production namespace
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-production
+  namespace: production
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: wicks482/front-end-service:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+            - name: PRODUCT_CATALOG_SERVICE_ADDR
+              value: "productcatalog-service-production:3550"
+            - name: CART_SERVICE_ADDR
+              value: "cart-service-production:7070"
+            - name: AD_SERVICE_ADDR
+              value: "adservice-service-production:9555"
+            - name: CURRENCY_SERVICE_ADDR
+              value: "currency-service-production:7000"
+            - name: RECOMMENDATION_SERVICE_ADDR
+              value: "recommendation-service-production:8080"
+            - name: SHIPPING_SERVICE_ADDR
+              value: "shippingservice-service-production:50051"
+            - name: CHECKOUT_SERVICE_ADDR
+              value: "checkout-service-production:5050"
+            - name: EMAIL_SERVICE_ADDR
+              value: "emailservice-service-production:8080"
+            # Add any other environment variables needed for frontend here

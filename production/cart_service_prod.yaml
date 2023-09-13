@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cart-service-production
+  namespace: production
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cart-service
+  template:
+    metadata:
+      labels:
+        app: cart-service
+    spec:
+      containers:
+        - name: cart-service
+          image: wicks482/cartservice:latest
+          ports:
+            - containerPort: 7070
+          env:
+            - name: REDIS_ADDR
+              value: "<redis-service-name>:<redis-service-port>"
+            - name: SERVICE_NAME
+              value: cart

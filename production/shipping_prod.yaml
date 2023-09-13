@@ -1,0 +1,27 @@
+# shippingservice-service Deployment in production namespace
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shippingservice-service-production
+  namespace: production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shippingservice-service
+  template:
+    metadata:
+      labels:
+        app: shippingservice-service
+    spec:
+      containers:
+        - name: shippingservice
+          image: wicks482/shippingservice:latest
+          ports:
+            - containerPort: 50051
+          env:
+            - name: PORT
+              value: "50051"
+            - name: SERVICE_NAME
+              value: shipping
+            # Add other environment variables for shipping service here
