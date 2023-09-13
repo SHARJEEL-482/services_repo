@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: checkout-service-deployment
+spec:
+  replicas: 1 # Adjust the number of replicas as needed
+  selector:
+    matchLabels:
+      app: checkout-service
+  template:
+    metadata:
+      labels:
+        app: checkout-service
+    spec:
+      containers:
+        - name: checkout-service
+          image: wicks482/checkoutservice:latest # Replace with your Checkout Service image and tag
+          ports:
+            - containerPort: 5050
+          env:
+            - name: PORT
+              value: "5050"
+            - name: PRODUCT_CATALOG_SERVICE_ADDR
+              value: "productcatalog-service:3550"
+            - name: SHIPPING_SERVICE_ADDR
+              value: "shippingservice-service:50051" # Replace with the actual port for the shipping service
+            - name: PAYMENT_SERVICE_ADDR
+              value: "paymentservice-service:50051"
+            - name: EMAIL_SERVICE_ADDR
+              value: "emailservice-service:8080" # Replace with the actual port for the email service
+            - name: CURRENCY_SERVICE_ADDR
+              value: "currencyservice-service:7000" # Replace with the actual port for the currency service
+            - name: CART_SERVICE_ADDR
+              value: "cart-service:80" # Assuming cart service exposes port 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: checkout-service
+spec:
+  selector:
+    app: checkout-service
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5050

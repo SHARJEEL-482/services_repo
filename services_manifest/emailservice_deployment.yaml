@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: emailservice-deployment
+spec:
+  replicas: 1 # Adjust the number of replicas as needed
+  selector:
+    matchLabels:
+      app: emailservice
+  template:
+    metadata:
+      labels:
+        app: emailservice
+    spec:
+      containers:
+        - name: emailservice
+          image: wicks482/emailservice:latest # Replace with your EmailService image and tag
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+            - name: SERVICE_NAME
+              value: email
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: emailservice-service
+spec:
+  selector:
+    app: emailservice
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080

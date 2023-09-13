@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adservice-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: adservice
+  template:
+    metadata:
+      labels:
+        app: adservice
+    spec:
+      containers:
+        - name: adservice
+          image: wicks482/adservice:latest
+          ports:
+            - containerPort: 9555
+          env:
+            - name: PORT
+              value: "9555"
+            - name: SERVICE_NAME
+              value: adservice
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: adservice-service
+spec:
+  selector:
+    app: adservice
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 9555
+  type: NodePort  # Expose the service on a port accessible from outside the cluster
