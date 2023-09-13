@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: checkout-service-staging
+  namespace: staging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: checkout-service
+  template:
+    metadata:
+      labels:
+        app: checkout-service
+    spec:
+      containers:
+        - name: checkout-service
+          image: wicks482/checkoutservice:latest
+          ports:
+            - containerPort: 5050
+          env:
+            - name: PORT
+              value: "5050"
+            - name: PRODUCT_CATALOG_SERVICE_ADDR
+              value: "productcatalog-service-staging:3550"
+            - name: SHIPPING_SERVICE_ADDR
+              value: "shippingservice-service-staging:50051"
+            - name: PAYMENT_SERVICE_ADDR
+              value: "paymentservice-service-staging:50051"
+            - name: EMAIL_SERVICE_ADDR
+              value: "emailservice-service-staging:8080"
+            - name: CURRENCY_SERVICE_ADDR
+              value: "currencyservice-service-staging:7000"
+            - name: CART_SERVICE_ADDR
+              value: "cart-service-staging:80"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: checkout-service-staging
+  namespace: staging
+spec:
+  selector:
+    app: checkout-service
+  ports:
+    - protocol: TCP
+      port: 5050
+      targetPort: 5050

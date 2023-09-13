@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: recommendationservice-service-staging
+  namespace: staging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: recommendationservice-service
+  template:
+    metadata:
+      labels:
+        app: recommendationservice-service
+    spec:
+      containers:
+        - name: recommendationservice
+          image: wicks482/recommendationservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+            - name: SERVICE_NAME
+              value: recommendation
+            - name: PRODUCT_CATALOG_SERVICE_ADDR
+              value: "productcatalog-service-staging:3550"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: recommendationservice-service-staging
+  namespace: staging
+spec:
+  selector:
+    app: recommendationservice-service
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080

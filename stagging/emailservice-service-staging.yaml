@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: emailservice-service-staging
+  namespace: staging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: emailservice-service
+  template:
+    metadata:
+      labels:
+        app: emailservice-service
+    spec:
+      containers:
+        - name: emailservice
+          image: wicks482/emailservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+            - name: SERVICE_NAME
+              value: email
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: emailservice-service-staging
+  namespace: staging
+spec:
+  selector:
+    app: emailservice-service
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080

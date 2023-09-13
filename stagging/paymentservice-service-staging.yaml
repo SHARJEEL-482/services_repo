@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: paymentservice-service-staging
+  namespace: staging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: paymentservice-service
+  template:
+    metadata:
+      labels:
+        app: paymentservice-service
+    spec:
+      containers:
+        - name: paymentservice
+          image: wicks482/paymentservice:latest
+          ports:
+            - containerPort: 50051
+          env:
+            - name: PORT
+              value: "50051"
+            - name: SERVICE_NAME
+              value: payment
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: paymentservice-service-staging
+  namespace: staging
+spec:
+  selector:
+    app: paymentservice-service
+  ports:
+    - protocol: TCP
+      port: 50051
+      targetPort: 50051

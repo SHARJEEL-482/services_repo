@@ -1,0 +1,63 @@
+# Persistent Volume Claim for Redis data
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-data-pvc-staging
+  namespace: staging
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi  # Adjust the storage size as needed
+
+# Deployment for Redis Cart Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-cart-service-staging
+  namespace: staging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-cart-service
+  template:
+    metadata:
+      labels:
+        app: redis-cart-service
+    spec:
+      containers:
+        - name: redis-cart
+          image: redis:alpine
+          ports:
+            - containerPort: 6379
+          readinessProbe:
+            tcpSocket:
+              port: 6379
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: 6379
+            periodSeconds: 5
+          volumeMounts:
+            - name: data-volume
+              mountPath: /data
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: redis-data-pvc-staging  # Reference the PVC name here
+
+# Service for Redis Cart Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-cart-service-staging
+  namespace: staging
+spec:
+  selector:
+    app: redis-cart-service
+  ports:
+    - protocol: TCP
+      port: 6379
+      targetPort: 6379

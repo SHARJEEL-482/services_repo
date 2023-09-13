@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: productcatalog-service-staging
+  namespace: staging
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: productcatalog-service
+  template:
+    metadata:
+      labels:
+        app: productcatalog-service
+    spec:
+      containers:
+        - name: productcatalog
+          image: wicks482/productcatalogservice:latest
+          ports:
+            - containerPort: 3550
+          env:
+            - name: PORT
+              value: "3550"
+            - name: SERVICE_NAME
+              value: productcatalog
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: productcatalog-service-staging
+  namespace: staging
+spec:
+  selector:
+    app: productcatalog-service
+  ports:
+    - protocol: TCP
+      port: 3550
+      targetPort: 3550

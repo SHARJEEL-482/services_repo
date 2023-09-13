@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shippingservice-service-staging
+  namespace: staging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shippingservice-service
+  template:
+    metadata:
+      labels:
+        app: shippingservice-service
+    spec:
+      containers:
+        - name: shippingservice
+          image: wicks482/shippingservice:latest
+          ports:
+            - containerPort: 50051
+          env:
+            - name: PORT
+              value: "50051"
+            - name: SERVICE_NAME
+              value: shipping
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shippingservice-service-staging
+  namespace: staging
+spec:
+  selector:
+    app: shippingservice-service
+  ports:
+    - protocol: TCP
+      port: 50051
+      targetPort: 50051

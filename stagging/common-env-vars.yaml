@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: common-env-vars
+  namespace: staging
+data:
+  ENV_PLATFORM: "onprem"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "opentelemetry-collector-staging:4317"

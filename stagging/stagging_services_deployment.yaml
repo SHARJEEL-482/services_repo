@@ -1,0 +1,524 @@
+# Staging deployment for all microservices
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: staging
+  labels:
+    name: staging
+
+---
+# Common environment variables
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: common-env-vars
+  namespace: staging
+data:
+  ENV_PLATFORM: "onprem"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "opentelemetry-collector-staging:4317"
+
+---
+# Frontend
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-staging
+  namespace: staging
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: wicks482/front-end-service:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+            - name: PRODUCT_CATALOG_SERVICE_ADDR
+              value: "productcatalog-service-staging:3550"
+            - name: CART_SERVICE_ADDR
+              value: "cart-service-staging:80"
+            - name: AD_SERVICE_ADDR
+              value: "adservice-service-staging:80"
+            - name: CURRENCY_SERVICE_ADDR
+              value: "currency-service-staging:80"
+            - name: RECOMMENDATION_SERVICE_ADDR
+              value: "recommendation-service-staging:80"
+            - name: SHIPPING_SERVICE_ADDR
+              value: "shipping-service-staging:80"
+            - name: CHECKOUT_SERVICE_ADDR
+              value: "checkout-service-staging:80"
+
+# Cart Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cart-service-staging
+  namespace: staging
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cart-service
+  template:
+    metadata:
+      labels:
+        app: cart-service
+    spec:
+      containers:
+        - name: cart-service
+          image: wicks482/cartservice:latest
+          ports:
+            - containerPort: 7070
+          env:
+            - name: REDIS_ADDR
+              value: "redis-cart-service-staging:6379"
+
+# Ad Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adservice-service-staging
+  namespace: staging
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: adservice-service
+  template:
+    metadata:
+      labels:
+        app: adservice-service
+    spec:
+      containers:
+        - name: adservice-service
+          image: wicks482/adservice:latest
+          ports:
+            - containerPort: 9555
+          env:
+            - name: PORT
+              value: "9555"
+            - name: SERVICE_NAME
+              value: adservice
+
+# Checkout Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: checkout-service-staging
+  namespace: staging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: checkout-service
+  template:
+    metadata:
+      labels:
+        app: checkout-service
+    spec:
+      containers:
+        - name: checkout-service
+          image: wicks482/checkoutservice:latest
+          ports:
+            - containerPort: 5050
+          env:
+            - name: PORT
+              value: "5050"
+            - name: PRODUCT_CATALOG_SERVICE_ADDR
+              value: "productcatalog-service-staging:3550"
+            - name: SHIPPING_SERVICE_ADDR
+              value: "shippingservice-service-staging:50051"
+            - name: PAYMENT_SERVICE_ADDR
+              value: "paymentservice-service-staging:50051"
+            - name: EMAIL_SERVICE_ADDR
+              value: "emailservice-service-staging:8080"
+            - name: CURRENCY_SERVICE_ADDR
+              value: "currencyservice-service-staging:7000"
+            - name: CART_SERVICE_ADDR
+              value: "cart-service-staging:80"
+
+# Currency Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: currency-service-staging
+  namespace: staging
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: currency-service
+  template:
+    metadata:
+      labels:
+        app: currency-service
+    spec:
+      containers:
+        - name: currency
+          image: wicks482/currencyservice:latest
+          ports:
+            - containerPort: 7000
+          env:
+            - name: PORT
+              value: "7000"
+            - name: SERVICE_NAME
+              value: currency
+
+# Email Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: emailservice-service-staging
+  namespace: staging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: emailservice-service
+  template:
+    metadata:
+      labels:
+        app: emailservice-service
+    spec:
+      containers:
+        - name: emailservice
+          image: wicks482/emailservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+            - name: SERVICE_NAME
+              value: email
+
+# Payment Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: paymentservice-service-staging
+  namespace: staging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: paymentservice-service
+  template:
+    metadata:
+      labels:
+        app: paymentservice-service
+    spec:
+      containers:
+        - name: paymentservice
+          image: wicks482/paymentservice:latest
+          ports:
+            - containerPort: 50051
+          env:
+            - name: PORT
+              value: "50051"
+            - name: SERVICE_NAME
+              value: payment
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+
+# Product Catalog Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: productcatalog-service-staging
+  namespace: staging
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: productcatalog-service
+  template:
+    metadata:
+      labels:
+        app: productcatalog-service
+    spec:
+      containers:
+        - name: productcatalog
+          image: wicks482/productcatalogservice:latest
+          ports:
+            - containerPort: 3550
+          env:
+            - name: PORT
+              value: "3550"
+            - name: SERVICE_NAME
+              value: productcatalog
+
+# Redis Cart Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-cart-service-staging
+  namespace: staging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-cart-service
+  template:
+    metadata:
+      labels:
+        app: redis-cart-service
+    spec:
+      containers:
+        - name: redis-cart
+          image: redis:alpine
+          ports:
+            - containerPort: 6379
+          readinessProbe:
+            tcpSocket:
+              port: 6379
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: 6379
+            periodSeconds: 5
+          volumeMounts:
+            - name: data-volume
+              mountPath: /data
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: redis-pvc-staging
+
+# Recommendation Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: recommendationservice-service-staging
+  namespace: staging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: recommendationservice-service
+  template:
+    metadata:
+      labels:
+        app: recommendationservice-service
+    spec:
+      containers:
+        - name: recommendationservice
+          image: wicks482/recommendationservice:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+            - name: SERVICE_NAME
+              value: recommendation
+            - name: PRODUCT_CATALOG_SERVICE_ADDR
+              value: "productcatalog-service-staging:3550"
+
+# Shipping Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shippingservice-service-staging
+  namespace: staging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shippingservice-service
+  template:
+    metadata:
+      labels:
+        app: shippingservice-service
+    spec:
+      containers:
+        - name: shippingservice
+          image: wicks482/shippingservice:latest
+          ports:
+            - containerPort: 50051
+          env:
+            - name: PORT
+              value: "50051"
+            - name: SERVICE_NAME
+              value: shipping
+
+---
+# Individual Services
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service-staging
+  namespace: staging
+spec:
+  selector:
+    app: frontend
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: cart-service-staging
+  namespace: staging
+spec:
+  selector:
+    app: cart-service
+  ports:
+    - protocol: TCP
+      port: 7070
+      targetPort: 7070
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: adservice-service-staging
+  namespace: staging
+spec:
+  selector:
+    app: adservice-service
+  ports:
+    - protocol: TCP
+      port: 9555
+      targetPort: 9555
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: checkout-service-staging
+  namespace: staging
+spec:
+  selector:
+    app: checkout-service
+  ports:
+    - protocol: TCP
+      port: 5050
+      targetPort: 5050
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: currency-service-staging
+  namespace: staging
+spec:
+  selector:
+    app: currency-service
+  ports:
+    - protocol: TCP
+      port: 7000
+      targetPort: 7000
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: emailservice-service-staging
+  namespace: staging
+spec:
+  selector:
+    app: emailservice-service
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: paymentservice-service-staging
+  namespace: staging
+spec:
+  selector:
+    app: paymentservice-service
+  ports:
+    - protocol: TCP
+      port: 50051
+      targetPort: 50051
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: productcatalog-service-staging
+  namespace: staging
+spec:
+  selector:
+    app: productcatalog-service
+  ports:
+    - protocol: TCP
+      port: 3550
+      targetPort: 3550
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-cart-service-staging
+  namespace: staging
+spec:
+  selector:
+    app: redis-cart-service
+  ports:
+    - protocol: TCP
+      port: 6379
+      targetPort: 6379
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: recommendationservice-service-staging
+  namespace: staging
+spec:
+  selector:
+    app: recommendationservice-service
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: shippingservice-service-staging
+  namespace: staging
+spec:
+  selector:
+    app: shippingservice-service
+  ports:
+    - protocol: TCP
+      port: 50051
+      targetPort: 50051
+
+# Common Services
+apiVersion: v1
+kind: Service
+metadata:
+  name: common-service-staging
+  namespace: staging
+spec:
+  selector:
+    app: frontend
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-cart-service-staging
+  namespace: staging
+spec:
+  selector:
+    app: redis-cart-service
+  ports:
+    - protocol: TCP
+      port: 6379
+      targetPort: 6379
