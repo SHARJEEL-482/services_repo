@@ -1,0 +1,82 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: microservices-deployment-pipeline
+spec:
+  tasks:
+    - name: deploy-adservice
+      taskRef:
+        name: kubectl-apply
+      params:
+        - name: KUBECTL_APPLY_MANIFESTS
+          value: /workspace/adservice-repo/services_repo/services_manifest/adservice_deployment.yaml
+
+    - name: deploy-cart-service
+      taskRef:
+        name: kubectl-apply
+      params:
+        - name: KUBECTL_APPLY_MANIFESTS
+          value: /workspace/cart-service-repo/services_repo/services_manifest/cartservice_deployment.yaml
+
+    - name: deploy-checkout-service
+      taskRef:
+        name: kubectl-apply
+      params:
+        - name: KUBECTL_APPLY_MANIFESTS
+          value: /workspace/cart-service-repo/services_repo/services_manifest/checkoutservice_deployment.yaml
+
+    - name: deploy-currency-service
+      taskRef:
+        name: kubectl-apply
+      params:
+        - name: KUBECTL_APPLY_MANIFESTS
+          value: /workspace/cart-service-repo/services_repo/services_manifest/currency_service_deployment.yaml
+
+    - name: deploy-email-service
+      taskRef:
+        name: kubectl-apply
+      params:
+        - name: KUBECTL_APPLY_MANIFESTS
+          value: /workspace/cart-service-repo/services_repo/services_manifest/emailservice_deployment.yaml
+
+    - name: deploy-frontend-service
+      taskRef:
+        name: kubectl-apply
+      params:
+        - name: KUBECTL_APPLY_MANIFESTS
+          value: /workspace/cart-service-repo/services_repo/services_manifest/frontend_deployment.yaml
+
+    - name: deploy-payment-service
+      taskRef:
+        name: kubectl-apply
+      params:
+        - name: KUBECTL_APPLY_MANIFESTS
+          value: /workspace/cart-service-repo/services_repo/services_manifest/payment_service_deployment.yaml
+
+    - name: deploy-productcatalog-service
+      taskRef:
+        name: kubectl-apply
+      params:
+        - name: KUBECTL_APPLY_MANIFESTS
+          value: /workspace/cart-service-repo/services_repo/services_manifest/productcatalogservice_deployment.yaml
+
+    - name: deploy-radiscart-service
+      taskRef:
+        name: kubectl-apply
+      params:
+        - name: KUBECTL_APPLY_MANIFESTS
+          value: /workspace/cart-service-repo/services_repo/services_manifest/radiscart_deployment.yaml
+
+    - name: deploy-recommendation-service
+      taskRef:
+        name: kubectl-apply
+      params:
+        - name: KUBECTL_APPLY_MANIFESTS
+          value: /workspace/cart-service-repo/services_repo/services_manifest/recommendationservice_deployment.yaml
+
+    - name: deploy-shipping-service
+      taskRef:
+        name: kubectl-apply
+      params:
+        - name: KUBECTL_APPLY_MANIFESTS
+          value: /workspace/cart-service-repo/services_repo/services_manifest/shippingservice_deployment.yaml

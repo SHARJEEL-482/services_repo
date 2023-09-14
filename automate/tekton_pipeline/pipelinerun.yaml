@@ -1,0 +1,42 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: microservices-deployment-pipeline-run-
+spec:
+  pipelineRef:
+    name: microservices-deployment-pipeline
+  params:
+    - name: KUBECTL_APPLY_MANIFESTS_ADSERVICE
+      value: /workspace/adservice-repo/services_repo/services_manifest/adservice_deployment.yaml
+    - name: KUBECTL_APPLY_MANIFESTS_CARTSERVICE
+      value: /workspace/cart-service-repo/services_repo/services_manifest/cartservice_deployment.yaml
+    - name: KUBECTL_APPLY_MANIFESTS_CHECKOUTSERVICE
+      value: /workspace/cart-service-repo/services_repo/services_manifest/checkoutservice_deployment.yaml
+    - name: KUBECTL_APPLY_MANIFESTS_CURRENCYSERVICE
+      value: /workspace/cart-service-repo/services_repo/services_manifest/currency_service_deployment.yaml
+    - name: KUBECTL_APPLY_MANIFESTS_EMAILSERVICE
+      value: /workspace/cart-service-repo/services_repo/services_manifest/emailservice_deployment.yaml
+    - name: KUBECTL_APPLY_MANIFESTS_FRONTENDSERVICE
+      value: /workspace/cart-service-repo/services_repo/services_manifest/frontend_deployment.yaml
+    - name: KUBECTL_APPLY_MANIFESTS_PAYMENTSERVICE
+      value: /workspace/cart-service-repo/services_repo/services_manifest/payment_service_deployment.yaml
+    - name: KUBECTL_APPLY_MANIFESTS_PRODUCTCATALOGSERVICE
+      value: /workspace/cart-service-repo/services_repo/services_manifest/productcatalogservice_deployment.yaml
+    - name: KUBECTL_APPLY_MANIFESTS_RADISCARTSERVICE
+      value: /workspace/cart-service-repo/services_repo/services_manifest/radiscart_deployment.yaml
+    - name: KUBECTL_APPLY_MANIFESTS_RECOMMENDATIONSERVICE
+      value: /workspace/cart-service-repo/services_repo/services_manifest/recommendationservice_deployment.yaml
+    - name: KUBECTL_APPLY_MANIFESTS_SHIPPINGSERVICE
+      value: /workspace/cart-service-repo/services_repo/services_manifest/shippingservice_deployment.yaml
+  podTemplate:
+    securityContext:
+      fsGroup: 65532
+  workspaces:
+    - name: shared-data
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
