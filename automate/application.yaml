@@ -13,7 +13,7 @@ spec:
     namespace: my_service_app
   syncPolicy:
     automated:
-      #selfHeal: true
+      selfHeal: true
       prune: true
   applications:
     - name: adservice-app
