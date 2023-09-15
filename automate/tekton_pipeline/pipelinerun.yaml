@@ -8,26 +8,48 @@ spec:
   params:
     - name: KUBECTL_APPLY_MANIFESTS_ADSERVICE
       value: /workspace/adservice-repo/services_repo/services_manifest/adservice_deployment.yaml
+    - name: DOCKER_IMAGE_ADSERVICE
+      value: wicks482/adservice
     - name: KUBECTL_APPLY_MANIFESTS_CARTSERVICE
       value: /workspace/cart-service-repo/services_repo/services_manifest/cartservice_deployment.yaml
+    - name: DOCKER_IMAGE_CARTSERVICE
+      value: wicks482/cartservice
     - name: KUBECTL_APPLY_MANIFESTS_CHECKOUTSERVICE
       value: /workspace/cart-service-repo/services_repo/services_manifest/checkoutservice_deployment.yaml
+    - name: DOCKER_IMAGE_CHECKOUTSERVICE
+      value: wicks482/checkoutservice
     - name: KUBECTL_APPLY_MANIFESTS_CURRENCYSERVICE
       value: /workspace/cart-service-repo/services_repo/services_manifest/currency_service_deployment.yaml
+    - name: DOCKER_IMAGE_CURRENCYSERVICE
+      value: wicks482/currencyservice
     - name: KUBECTL_APPLY_MANIFESTS_EMAILSERVICE
       value: /workspace/cart-service-repo/services_repo/services_manifest/emailservice_deployment.yaml
+    - name: DOCKER_IMAGE_EMAILSERVICE
+      value: wicks482/emailservice
     - name: KUBECTL_APPLY_MANIFESTS_FRONTENDSERVICE
       value: /workspace/cart-service-repo/services_repo/services_manifest/frontend_deployment.yaml
+    - name: DOCKER_IMAGE_FRONTENDSERVICE
+      value: wicks482/frontendservice
     - name: KUBECTL_APPLY_MANIFESTS_PAYMENTSERVICE
       value: /workspace/cart-service-repo/services_repo/services_manifest/payment_service_deployment.yaml
+    - name: DOCKER_IMAGE_PAYMENTSERVICE
+      value: wicks482/paymentservice
     - name: KUBECTL_APPLY_MANIFESTS_PRODUCTCATALOGSERVICE
       value: /workspace/cart-service-repo/services_repo/services_manifest/productcatalogservice_deployment.yaml
+    - name: DOCKER_IMAGE_PRODUCTCATALOGSERVICE
+      value: wicks482/productcatalogservice
     - name: KUBECTL_APPLY_MANIFESTS_RADISCARTSERVICE
       value: /workspace/cart-service-repo/services_repo/services_manifest/radiscart_deployment.yaml
+    - name: DOCKER_IMAGE_RADISCARTSERVICE
+      value: wicks482/radiscartservice
     - name: KUBECTL_APPLY_MANIFESTS_RECOMMENDATIONSERVICE
       value: /workspace/cart-service-repo/services_repo/services_manifest/recommendationservice_deployment.yaml
+    - name: DOCKER_IMAGE_RECOMMENDATIONSERVICE
+      value: wicks482/recommendationservice
     - name: KUBECTL_APPLY_MANIFESTS_SHIPPINGSERVICE
       value: /workspace/cart-service-repo/services_repo/services_manifest/shippingservice_deployment.yaml
+    - name: DOCKER_IMAGE_SHIPPINGSERVICE
+      value: wicks482/shippingservice
   podTemplate:
     securityContext:
       fsGroup: 65532
@@ -40,3 +62,6 @@ spec:
           resources:
             requests:
               storage: 1Gi
+    - name: docker-credentials
+      secret:
+        secretName: docker-hub-secret

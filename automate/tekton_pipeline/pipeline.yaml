@@ -11,12 +11,42 @@ spec:
         - name: KUBECTL_APPLY_MANIFESTS
           value: /workspace/adservice-repo/services_repo/services_manifest/adservice_deployment.yaml
 
+    - name: push-adservice-image
+      taskRef:
+        name: push-to-registry
+      params:
+        - name: directory
+          value: /workspace/adservice-repo
+        - name: dockerfile
+          value: /workspace/adservice-repo/services_repo/services_manifest/adservice_deployment.yaml
+        - name: build_number
+          value: latest
+        - name: destination_image
+          value: docker.io/wicks482/adservice:latest
+        - name: secretName
+          value: docker-hub-secret
+
     - name: deploy-cart-service
       taskRef:
         name: kubectl-apply
       params:
         - name: KUBECTL_APPLY_MANIFESTS
           value: /workspace/cart-service-repo/services_repo/services_manifest/cartservice_deployment.yaml
+
+    - name: push-cart-service-image
+      taskRef:
+        name: push-to-registry
+      params:
+        - name: directory
+          value: /workspace/cart-service-repo
+        - name: dockerfile
+          value: /workspace/cart-service-repo/services_repo/services_manifest/cartservice_deployment.yaml
+        - name: build_number
+          value: latest
+        - name: destination_image
+          value: docker.io/wicks482/cartservice:latest
+        - name: secretName
+          value: docker-hub-secret
 
     - name: deploy-checkout-service
       taskRef:
@@ -25,12 +55,42 @@ spec:
         - name: KUBECTL_APPLY_MANIFESTS
           value: /workspace/cart-service-repo/services_repo/services_manifest/checkoutservice_deployment.yaml
 
+    - name: push-checkout-service-image
+      taskRef:
+        name: push-to-registry
+      params:
+        - name: directory
+          value: /workspace/cart-service-repo
+        - name: dockerfile
+          value: /workspace/cart-service-repo/services_repo/services_manifest/checkoutservice_deployment.yaml
+        - name: build_number
+          value: latest
+        - name: destination_image
+          value: docker.io/wicks482/checkoutservice:latest
+        - name: secretName
+          value: docker-hub-secret
+
     - name: deploy-currency-service
       taskRef:
         name: kubectl-apply
       params:
         - name: KUBECTL_APPLY_MANIFESTS
           value: /workspace/cart-service-repo/services_repo/services_manifest/currency_service_deployment.yaml
+
+    - name: push-currency-service-image
+      taskRef:
+        name: push-to-registry
+      params:
+        - name: directory
+          value: /workspace/cart-service-repo
+        - name: dockerfile
+          value: /workspace/cart-service-repo/services_repo/services_manifest/currency_service_deployment.yaml
+        - name: build_number
+          value: latest
+        - name: destination_image
+          value: docker.io/wicks482/currencyservice:latest
+        - name: secretName
+          value: docker-hub-secret
 
     - name: deploy-email-service
       taskRef:
@@ -39,12 +99,42 @@ spec:
         - name: KUBECTL_APPLY_MANIFESTS
           value: /workspace/cart-service-repo/services_repo/services_manifest/emailservice_deployment.yaml
 
+    - name: push-email-service-image
+      taskRef:
+        name: push-to-registry
+      params:
+        - name: directory
+          value: /workspace/cart-service-repo
+        - name: dockerfile
+          value: /workspace/cart-service-repo/services_repo/services_manifest/emailservice_deployment.yaml
+        - name: build_number
+          value: latest
+        - name: destination_image
+          value: docker.io/wicks482/emailservice:latest
+        - name: secretName
+          value: docker-hub-secret
+
     - name: deploy-frontend-service
       taskRef:
         name: kubectl-apply
       params:
         - name: KUBECTL_APPLY_MANIFESTS
           value: /workspace/cart-service-repo/services_repo/services_manifest/frontend_deployment.yaml
+
+    - name: push-frontend-service-image
+      taskRef:
+        name: push-to-registry
+      params:
+        - name: directory
+          value: /workspace/cart-service-repo
+        - name: dockerfile
+          value: /workspace/cart-service-repo/services_repo/services_manifest/frontend_deployment.yaml
+        - name: build_number
+          value: latest
+        - name: destination_image
+          value: docker.io/wicks482/frontendservice:latest
+        - name: secretName
+          value: docker-hub-secret
 
     - name: deploy-payment-service
       taskRef:
@@ -53,12 +143,289 @@ spec:
         - name: KUBECTL_APPLY_MANIFESTS
           value: /workspace/cart-service-repo/services_repo/services_manifest/payment_service_deployment.yaml
 
-    - name: deploy-productcatalog-service
+    - name: push-payment-service-image
       taskRef:
+        name: push-to-registry
+      params:
+        - name: directory
+          value: /workspace/cart-service-repo
+        - name: dockerfile
+          value: /workspace/cart-service-repo/services_repo/services_manifest/payment_service_deployment.yaml
+        - name: build_number
+          value: latest
+        - name: destination_image
+          value: docker.io/wicks482/paymentservice:latest
+        - name: secretName
+          value: docker-hub-secret
+
+    - name: deploy-productcatalog-service
+      taskRef:apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+name: microservices-deployment-pipeline
+spec:
+tasks:
+- name: deploy-adservice
+taskRef:
+name: kubectl-apply
+params:
+- name: KUBECTL_APPLY_MANIFESTS
+value: /workspace/adservice-repo/services_repo/services_manifest/adservice_deployment.yaml
+
+- name: push-adservice-image
+taskRef:
+name: push-to-registry
+params:
+- name: directory
+value: /workspace/adservice-repo
+- name: dockerfile
+value: /workspace/adservice-repo/services_repo/services_manifest/adservice_deployment.yaml
+- name: build_number
+value: latest
+- name: destination_image
+value: docker.io/wicks482/adservice:latest
+- name: secretName
+value: docker-hub-secret # Reference to your Docker Hub secret
+
+- name: deploy-cart-service
+taskRef:
+name: kubectl-apply
+params:
+- name: KUBECTL_APPLY_MANIFESTS
+value: /workspace/cart-service-repo/services_repo/services_manifest/cartservice_deployment.yaml
+
+- name: push-cart-service-image
+taskRef:
+name: push-to-registry
+params:
+- name: directory
+value: /workspace/cart-service-repo
+- name: dockerfile
+value: /workspace/cart-service-repo/services_repo/services_manifest/cartservice_deployment.yaml
+- name: build_number
+value: latest
+- name: destination_image
+value: docker.io/wicks482/cartservice:latest
+- name: secretName
+value: docker-hub-secret # Reference to your Docker Hub secret
+
+- name: deploy-checkout-service
+taskRef:
+name: kubectl-apply
+params:
+- name: KUBECTL_APPLY_MANIFESTS
+value: /workspace/cart-service-repo/services_repo/services_manifest/checkoutservice_deployment.yaml
+
+- name: push-checkout-service-image
+taskRef:
+name: push-to-registry
+params:
+- name: directory
+value: /workspace/cart-service-repo
+- name: dockerfile
+value: /workspace/cart-service-repo/services_repo/services_manifest/checkoutservice_deployment.yaml
+- name: build_number
+value: latest
+- name: destination_image
+value: docker.io/wicks482/checkoutservice:latest
+- name: secretName
+value: docker-hub-secret # Reference to your Docker Hub secret
+
+- name: deploy-currency-service
+taskRef:
+name: kubectl-apply
+params:
+- name: KUBECTL_APPLY_MANIFESTS
+value: /workspace/cart-service-repo/services_repo/services_manifest/currency_service_deployment.yaml
+
+- name: push-currency-service-image
+taskRef:
+name: push-to-registry
+params:
+- name: directory
+value: /workspace/cart-service-repo
+- name: dockerfile
+value: /workspace/cart-service-repo/services_repo/services_manifest/currency_service_deployment.yaml
+- name: build_number
+value: latest
+- name: destination_image
+value: docker.io/wicks482/currencyservice:latest
+- name: secretName
+value: docker-hub-secret # Reference to your Docker Hub secret
+
+- name: deploy-email-service
+taskRef:
+name: kubectl-apply
+params:
+- name: KUBECTL_APPLY_MANIFESTS
+value: /workspace/cart-service-repo/services_repo/services_manifest/emailservice_deployment.yaml
+
+- name: push-email-service-image
+taskRef:
+name: push-to-registry
+params:
+- name: directory
+value: /workspace/cart-service-repo
+- name: dockerfile
+value: /workspace/cart-service-repo/services_repo/services_manifest/emailservice_deployment.yaml
+- name: build_number
+value: latest
+- name: destination_image
+value: docker.io/wicks482/emailservice:latest
+- name: secretName
+value: docker-hub-secret # Reference to your Docker Hub secret
+
+- name: deploy-frontend-service
+taskRef:
+name: kubectl-apply
+params:
+- name: KUBECTL_APPLY_MANIFESTS
+value: /workspace/cart-service-repo/services_repo/services_manifest/frontend_deployment.yaml
+
+- name: push-frontend-service-image
+taskRef:
+name: push-to-registry
+params:
+- name: directory
+value: /workspace/cart-service-repo
+- name: dockerfile
+value: /workspace/cart-service-repo/services_repo/services_manifest/frontend_deployment.yaml
+- name: build_number
+value: latest
+- name: destination_image
+value: docker.io/wicks482/frontendservice:latest
+- name: secretName
+value: docker-hub-secret # Reference to your Docker Hub secret
+
+- name: deploy-payment-service
+taskRef:
+name: kubectl-apply
+params:
+- name: KUBECTL_APPLY_MANIFESTS
+value: /workspace/cart-service-repo/services_repo/services_manifest/payment_service_deployment.yaml
+
+- name: push-payment-service-image
+taskRef:
+name: push-to-registry
+params:
+- name: directory
+value: /workspace/cart-service-repo
+- name: dockerfile
+value: /workspace/cart-service-repo/services_repo/services_manifest/payment_service_deployment.yaml
+- name: build_number
+value: latest
+- name: destination_image
+value: docker.io/wicks482/paymentservice:latest
+- name: secretName
+value: docker-hub-secret # Reference to your Docker Hub secret
+
+- name: deploy-productcatalog-service
+taskRef:
+name: kubectl-apply
+params:
+- name: KUBECTL_APPLY_MANIFESTS
+value: /workspace/cart-service-repo/services_repo/services_manifest/productcatalogservice_deployment.yaml
+
+- name: push-productcatalog-service-image
+taskRef:
+name: push-to-registry
+params:
+- name: directory
+value: /workspace/cart-service-repo
+- name: dockerfile
+value: /workspace/cart-service-repo/services_repo/services_manifest/productcatalogservice_deployment.yaml
+- name: build_number
+value: latest
+- name: destination_image
+value: docker.io/wicks482/productcatalogservice:latest
+- name: secretName
+value: docker-hub-secret # Reference to your Docker Hub secret
+
+- name: deploy-radiscart-service
+taskRef:
+name: kubectl-apply
+params:
+- name: KUBECTL_APPLY_MANIFESTS
+value: /workspace/cart-service-repo/services_repo/services_manifest/radiscart_deployment.yaml
+
+- name: push-radiscart-service-image
+taskRef:
+name: push-to-registry
+params:
+- name: directory
+value: /workspace/cart-service-repo
+- name: dockerfile
+value: /workspace/cart-service-repo/services_repo/services_manifest/radiscart_deployment.yaml
+- name: build_number
+value: latest
+- name: destination_image
+value: docker.io/wicks482/radiscartservice:latest
+- name: secretName
+value: docker-hub-secret # Reference to your Docker Hub secret
+
+- name: deploy-recommendation-service
+taskRef:
+name: kubectl-apply
+params:
+- name: KUBECTL_APPLY_MANIFESTS
+value: /workspace/cart-service-repo/services_repo/services_manifest/recommendationservice_deployment.yaml
+
+- name: push-recommendation-service-image
+taskRef:
+name: push-to-registry
+params:
+- name: directory
+value: /workspace/cart-service-repo
+- name: dockerfile
+value: /workspace/cart-service-repo/services_repo/services_manifest/recommendationservice_deployment.yaml
+- name: build_number
+value: latest
+- name: destination_image
+value: docker.io/wicks482/recommendationservice:latest
+- name: secretName
+value: docker-hub-secret # Reference to your Docker Hub secret
+
+- name: deploy-shipping-service
+taskRef:
+name: kubectl-apply
+params:
+- name: KUBECTL_APPLY_MANIFESTS
+value: /workspace/cart-service-repo/services_repo/services_manifest/shippingservice_deployment.yaml
+
+- name: push-shipping-service-image
+taskRef:
+name: push-to-registry
+params:
+- name: directory
+value: /workspace/cart-service-repo
+- name: dockerfile
+value: /workspace/cart-service-repo/services_repo/services_manifest/shippingservice_deployment.yaml
+- name: build_number
+value: latest
+- name: destination_image
+value: docker.io/wicks482/shippingservice:latest
+- name: secretName
+value: docker-hub-secret # Reference to your Docker Hub secret
+
         name: kubectl-apply
       params:
         - name: KUBECTL_APPLY_MANIFESTS
           value: /workspace/cart-service-repo/services_repo/services_manifest/productcatalogservice_deployment.yaml
+
+    - name: push-productcatalog-service-image
+      taskRef:
+        name: push-to-registry
+      params:
+        - name: directory
+          value: /workspace/cart-service-repo
+        - name: dockerfile
+          value: /workspace/cart-service-repo/services_repo/services_manifest/productcatalogservice_deployment.yaml
+        - name: build_number
+          value: latest
+        - name: destination_image
+          value: docker.io/wicks482/productcatalogservice:latest
+        - name: secretName
+          value: docker-hub-secret
 
     - name: deploy-radiscart-service
       taskRef:
@@ -67,6 +434,21 @@ spec:
         - name: KUBECTL_APPLY_MANIFESTS
           value: /workspace/cart-service-repo/services_repo/services_manifest/radiscart_deployment.yaml
 
+    - name: push-radiscart-service-image
+      taskRef:
+        name: push-to-registry
+      params:
+        - name: directory
+          value: /workspace/cart-service-repo
+        - name: dockerfile
+          value: /workspace/cart-service-repo/services_repo/services_manifest/radiscart_deployment.yaml
+        - name: build_number
+          value: latest
+        - name: destination_image
+          value: docker.io/wicks482/radiscartservice:latest
+        - name: secretName
+          value: docker-hub-secret
+
     - name: deploy-recommendation-service
       taskRef:
         name: kubectl-apply
@@ -74,9 +456,39 @@ spec:
         - name: KUBECTL_APPLY_MANIFESTS
           value: /workspace/cart-service-repo/services_repo/services_manifest/recommendationservice_deployment.yaml
 
+    - name: push-recommendation-service-image
+      taskRef:
+        name: push-to-registry
+      params:
+        - name: directory
+          value: /workspace/cart-service-repo
+        - name: dockerfile
+          value: /workspace/cart-service-repo/services_repo/services_manifest/recommendationservice_deployment.yaml
+        - name: build_number
+          value: latest
+        - name: destination_image
+          value: docker.io/wicks482/recommendationservice:latest
+        - name: secretName
+          value: docker-hub-secret
+
     - name: deploy-shipping-service
       taskRef:
         name: kubectl-apply
       params:
         - name: KUBECTL_APPLY_MANIFESTS
           value: /workspace/cart-service-repo/services_repo/services_manifest/shippingservice_deployment.yaml
+
+    - name: push-shipping-service-image
+      taskRef:
+        name: push-to-registry
+      params:
+        - name: directory
+          value: /workspace/cart-service-repo
+        - name: dockerfile
+          value: /workspace/cart-service-repo/services_repo/services_manifest/shippingservice_deployment.yaml
+        - name: build_number
+          value: latest
+        - name: destination_image
+          value: docker.io/wicks482/shippingservice:latest
+        - name: secretName
+          value: docker-hub-secret

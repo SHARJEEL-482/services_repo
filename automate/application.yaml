@@ -7,7 +7,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/SHARJEEL-482/services_repo.git
-    targetRevision: main
+    targetRevision: e58cf9b
   destination:
     server: https://kubernetes.default.svc
     namespace: my_service_app
@@ -15,47 +15,3 @@ spec:
     automated:
       selfHeal: true
       prune: true
-  applications:
-    - name: adservice-app
-      source:
-        path: services_manifest/adservice_deployment.yaml
-
-    - name: cartservice-app
-      source:
-        path: services_manifest/cartservice_deployment.yaml
-
-    - name: checkoutservice-app
-      source:
-        path: services_manifest/checkoutservice_deployment.yaml
-
-    - name: currencyservice-app
-      source:
-        path: services_manifest/currency_service_deployment.yaml
-
-    - name: emailservice-app
-      source:
-        path: services_manifest/emailservice_deployment.yaml
-
-    - name: frontendservice-app
-      source:
-        path: services_manifest/frontend_deployment.yaml
-
-    - name: paymentservice-app
-      source:
-        path: services_manifest/payment_service_deployment.yaml
-
-    - name: productcatalogservice-app
-      source:
-        path: services_manifest/productcatalogservice_deployment.yaml
-
-    - name: radiscartservice-app
-      source:
-        path: services_manifest/radiscart_deployment.yaml
-
-    - name: recommendationservice-app
-      source:
-        path: services_manifest/recommendationservice_deployment.yaml
-
-    - name: shippingservice-app
-      source:
-        path: services_manifest/shippingservice_deployment.yaml
